@@ -3,7 +3,7 @@ import redis
 import glob
 
 config = ConfigParser.ConfigParser()
-config_files = glob.glob("/etc/iccpmm/conf.d/*.conf")
+config_files = glob.glob("/etc/iccpmm/conf.d/*.conf") + glob.glob("/etc/iccfhd/conf.d/*.conf")
 config_files.sort()
 config.read(config_files)
 
