@@ -56,7 +56,7 @@ def db_exists(name, key):
 
 
 def db_persist(name, key):
-    return db.persist('%-%s' % (name, key))
+    return db.persist('%s-%s' % (name, key))
 
 
 def db_sadd(name, key, member):
