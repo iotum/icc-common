@@ -1,6 +1,9 @@
 import ConfigParser
 import redis
 import glob
+import sys
+
+this_module = sys.modules[__name__]
 
 config = ConfigParser.ConfigParser()
 config_files = \
@@ -93,3 +96,11 @@ def db_zrevrangeall(key):
 
 def db_zincrby(key, increment, member):
     return db.zincrby(key, increment, member)
+
+
+# TODO(spd/2015-02-26): Depricate the above and make this thing a proper class
+class DBWrapper():
+    def __getattr__(self, name):
+        def handler(*args, **kwargs):
+            return getattr(this_module, 'db_'+name)(*args, **kwargs)
+        return handler
