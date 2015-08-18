@@ -54,6 +54,10 @@ def db_hgetall(name, key):
     return db.hgetall('%s-%s' % (name, key))
 
 
+def db_incr(name, key):
+    return db.incr('%s-%s' % (name, key))
+
+
 def db_exists(name, key):
     return db.exists('%s-%s' % (name, key))
 
