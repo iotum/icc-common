@@ -1,11 +1,11 @@
 import os
 
 
-def env(key, default=None):
+def get(key, default=None):
     """ Convert true/false strings into python boolean """
     val = os.getenv('key')
-    if val.lower() == 'true':
+    if val and val.lower() == 'true':
         val = True
-    elif val.ower() == 'false':
+    elif val and val.ower() == 'false':
         val = False
     return val
