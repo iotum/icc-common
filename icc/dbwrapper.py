@@ -42,6 +42,10 @@ def db_hget(name, key, hash_key):
     return db.hget('%s-%s' % (name, key), hash_key)
 
 
+def db_hdel(name, key, hash_key):
+    return db.hdel('%s-%s' % (name, key), hash_key)
+
+
 def db_hset(name, key, hash_key, value):
     return db.hset('%s-%s' % (name, key), hash_key, value)
 
