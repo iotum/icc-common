@@ -35,6 +35,7 @@ def db_expire(name, key, expiry):
 
 
 def db_rename(name, key, new_key):
+    db.persist('%s-%s' % (name, key))
     return db.rename('%s-%s' % (name, key), '%s-%s' % (name, new_key))
 
 
@@ -43,14 +44,17 @@ def db_hget(name, key, hash_key):
 
 
 def db_hdel(name, key, hash_key):
+    db.persist('%s-%s' % (name, key))
     return db.hdel('%s-%s' % (name, key), hash_key)
 
 
 def db_hset(name, key, hash_key, value):
+    db.persist('%s-%s' % (name, key))
     return db.hset('%s-%s' % (name, key), hash_key, value)
 
 
 def db_hmset(name, key, values):
+    db.persist('%s-%s' % (name, key))
     return db.hmset('%s-%s' % (name, key), values)
 
 
@@ -59,6 +63,7 @@ def db_hgetall(name, key):
 
 
 def db_incr(name, key):
+    db.persist('%s-%s' % (name, key))
     return db.incr('%s-%s' % (name, key))
 
 
@@ -71,10 +76,12 @@ def db_persist(name, key):
 
 
 def db_sadd(name, key, member):
+    db.persist('%s-%s' % (name, key))
     return db.sadd('%s-%s' % (name, key), member)
 
 
 def db_srem(name, key, member):
+    db.persist('%s-%s' % (name, key))
     return db.srem('%s-%s' % (name, key), member)
 
 
