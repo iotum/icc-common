@@ -106,12 +106,14 @@ class DBWrapper(object):
         return self._db.zincrby(key, increment, member)
 
 
-    def scan_iter(self, name):
+    def scan_iter(self, name, prefix=None):
         """
         Make an iterator using the SCAN command.
 
         ``key`` ICC key prefix
         """
         prefix_len = len(name) + 1
-        for key in self._db.scan_iter('%s-*' % (name), count=1000):
+        if not prefix:
+            prefix = ''
+        for key in self._db.scan_iter('%s-%s*' % (name, prefix), count=1000):
             yield key[prefix_len:]
