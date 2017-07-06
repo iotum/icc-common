@@ -1,114 +1,119 @@
 import ConfigParser
-import redis
 import glob
-import sys
+import redis
 
-this_module = sys.modules[__name__]
+class DBWrapper(object):
+    def __init__(self):
+        config_files = \
+            glob.glob("/etc/iccpmm/conf.d/*.conf") + \
+            glob.glob("/etc/iccfhd/conf.d/*.conf")
+        config_files.sort()
 
-config = ConfigParser.ConfigParser()
-config_files = \
-    glob.glob("/etc/iccpmm/conf.d/*.conf") + \
-    glob.glob("/etc/iccfhd/conf.d/*.conf")
-config_files.sort()
-config.read(config_files)
+        config = ConfigParser.ConfigParser()
+        config.read(config_files)
 
-REDIS_SERVER = config.get('redis', 'host')
-REDIS_PORT = config.getint('redis', 'port')
+        server = config.get('redis', 'host')
+        port = config.getint('redis', 'port')
 
-db = redis.StrictRedis(host=REDIS_SERVER, port=REDIS_PORT, db=0)
-
-
-def db_get(name, key):
-    return db.get('%s-%s' % (name, key))
+        self._db = redis.StrictRedis(host=server, port=port, db=0)
 
 
-def db_set(name, key, value):
-    return db.set('%s-%s' % (name, key), value)
+    def get(self, name, key):
+        return self._db.get('%s-%s' % (name, key))
 
 
-def db_delete(name, key):
-    return db.delete('%s-%s' % (name, key))
+    def set(self, name, key, value):
+        return self._db.set('%s-%s' % (name, key), value)
 
 
-def db_expire(name, key, expiry):
-    return db.expire('%s-%s' % (name, key), expiry)
+    def delete(self, name, key):
+        return self._db.delete('%s-%s' % (name, key))
 
 
-def db_rename(name, key, new_key):
-    return db.rename('%s-%s' % (name, key), '%s-%s' % (name, new_key))
+    def expire(self, name, key, expiry):
+        return self._db.expire('%s-%s' % (name, key), expiry)
 
 
-def db_hget(name, key, hash_key):
-    return db.hget('%s-%s' % (name, key), hash_key)
+    def rename(self, name, key, new_key):
+        return self._db.rename('%s-%s' % (name, key), '%s-%s' % (name, new_key))
 
 
-def db_hdel(name, key, hash_key):
-    return db.hdel('%s-%s' % (name, key), hash_key)
+    def hget(self, name, key, hash_key):
+        return self._db.hget('%s-%s' % (name, key), hash_key)
 
 
-def db_hset(name, key, hash_key, value):
-    return db.hset('%s-%s' % (name, key), hash_key, value)
+    def hdel(self, name, key, hash_key):
+        return self._db.hdel('%s-%s' % (name, key), hash_key)
 
 
-def db_hmset(name, key, values):
-    return db.hmset('%s-%s' % (name, key), values)
+    def hset(self, name, key, hash_key, value):
+        return self._db.hset('%s-%s' % (name, key), hash_key, value)
 
 
-def db_hgetall(name, key):
-    return db.hgetall('%s-%s' % (name, key))
+    def hmset(self, name, key, values):
+        return self._db.hmset('%s-%s' % (name, key), values)
 
 
-def db_incr(name, key):
-    return db.incr('%s-%s' % (name, key))
+    def hgetall(self, name, key):
+        return self._db.hgetall('%s-%s' % (name, key))
 
 
-def db_exists(name, key):
-    return db.exists('%s-%s' % (name, key))
+    def incr(self, name, key):
+        return self._db.incr('%s-%s' % (name, key))
 
 
-def db_persist(name, key):
-    return db.persist('%s-%s' % (name, key))
+    def exists(self, name, key):
+        return self._db.exists('%s-%s' % (name, key))
 
 
-def db_sadd(name, key, member):
-    return db.sadd('%s-%s' % (name, key), member)
+    def persist(self, name, key):
+        return self._db.persist('%s-%s' % (name, key))
 
 
-def db_srem(name, key, member):
-    return db.srem('%s-%s' % (name, key), member)
+    def sadd(self, name, key, member):
+        return self._db.sadd('%s-%s' % (name, key), member)
 
 
-def db_smembers(name, key):
-    return db.smembers('%s-%s' % (name, key))
+    def srem(self, name, key, member):
+        return self._db.srem('%s-%s' % (name, key), member)
 
 
-def db_zadd(key, score, member):
-    return db.zadd(key, score, member)
+    def smembers(self, name, key):
+        return self._db.smembers('%s-%s' % (name, key))
 
 
-def db_zrem(key, member):
-    return db.zrem(key, member)
+    def zadd(self, key, score, member):
+        return self._db.zadd(key, score, member)
 
 
-def db_zscore(key, member):
-    return db.zscore(key, member)
+    def zrem(self, key, member):
+        return self._db.zrem(key, member)
 
 
-def db_zrevrange(key, start, stop):
-    return db.zrevrange(key, start, stop)
+    def zscore(self, key, member):
+        return self._db.zscore(key, member)
 
 
-def db_zrevrangeall(key):
-    return db.zrevrange(key, 0, -1)
+    def zrevrange(self, key, start, stop):
+        return self._db.zrevrange(key, start, stop)
 
 
-def db_zincrby(key, increment, member):
-    return db.zincrby(key, increment, member)
+    def zrevrangeall(self, key):
+        return self._db.zrevrange(key, 0, -1)
 
 
-# TODO(spd/2015-02-26): Depricate the above and make this thing a proper class
-class DBWrapper():
-    def __getattr__(self, name):
-        def handler(*args, **kwargs):
-            return getattr(this_module, 'db_'+name)(*args, **kwargs)
-        return handler
+    def zincrby(self, key, increment, member):
+        return self._db.zincrby(key, increment, member)
+
+
+    def scan_iter(self, name, prefix=None):
+        """
+        Make an iterator using the SCAN command.
+
+        ``key`` ICC key prefix
+        """
+        prefix_len = len(name) + 1
+        if not prefix:
+            prefix = ''
+        for key in self._db.scan_iter('%s-%s*' % (name, prefix), count=1000):
+            yield key[prefix_len:]
