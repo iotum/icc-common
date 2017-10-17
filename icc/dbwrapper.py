@@ -18,6 +18,11 @@ class DBWrapper(object):
         self._db = redis.StrictRedis(host=server, port=port, db=0)
 
 
+    def __getattr__(self, attr):
+        """ Passes all other Redis commands not defined in DBWrapper to StrictRedis. """
+        return getattr(self._db, attr)
+
+
     def get(self, name, key):
         return self._db.get('%s-%s' % (name, key))
 
