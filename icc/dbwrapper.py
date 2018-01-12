@@ -39,14 +39,9 @@ class DBWrapper(object):
         return self._db.set('%s-%s' % (name, key), value)
 
 
-    def del(self, name, key):
-        """ Removes the specified keys. A key is ignored if it does not exist. """
-        return self._db.del('%s-%s' % (name, key))
-
-
     def delete(self, name, key):
-        """ Alias to del(). """
-        return self.del(name, key)
+        """ Removes the specified keys. A key is ignored if it does not exist. """
+        return self._db.delete('%s-%s' % (name, key))
 
 
     def expire(self, name, key, expiry):
