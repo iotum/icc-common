@@ -36,6 +36,8 @@ class DBWrapper(object):
         If key already holds a value, it is overwritten, regardless of its type.
         Any previous time to live associated with the key is discarded on successful SET operation.
         """
+        if isinstance(value, bool):
+            value = str(value)
         return self._db.set('%s-%s' % (name, key), value)
 
 
@@ -81,6 +83,8 @@ class DBWrapper(object):
         If key does not exist, a new key holding a hash is created.
         If field already exists in the hash, it is overwritten.
         """
+        if isinstance(value, bool):
+            value = str(value)
         return self._db.hset('%s-%s' % (name, key), hash_key, value)
 
 
@@ -89,6 +93,10 @@ class DBWrapper(object):
         This command overwrites any specified fields already existing in the hash.
         If key does not exist, a new key holding a hash is created.
         """
+        values = {
+            key: (str(value) if isinstance(value, bool) else value)
+            for key, value in values.iteritems()
+        }
         return self._db.hmset('%s-%s' % (name, key), values)
 
 
@@ -179,7 +187,7 @@ class DBWrapper(object):
         The score values should be the string representation of a double precision floating point number.
         +inf and -inf values are valid values as well.
         """
-        return self._db.zadd(key, score, member)
+        return self._db.zadd(key, {member: score})
 
 
     def zrem(self, key, member):
