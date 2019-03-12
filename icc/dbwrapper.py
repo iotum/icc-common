@@ -23,6 +23,12 @@ class DBWrapper(object):
         return getattr(self._db, attr)
 
 
+    def _convert_type(self, value):
+        if value is None or isinstance(value, bool):
+            return str(value)
+        return value
+
+
     def get(self, name, key):
         """ Get the value of key.
         If the key does not exist the special value nil is returned.
@@ -36,8 +42,7 @@ class DBWrapper(object):
         If key already holds a value, it is overwritten, regardless of its type.
         Any previous time to live associated with the key is discarded on successful SET operation.
         """
-        if isinstance(value, bool):
-            value = str(value)
+        value = self._convert_type(value)
         return self._db.set('%s-%s' % (name, key), value)
 
 
@@ -83,8 +88,7 @@ class DBWrapper(object):
         If key does not exist, a new key holding a hash is created.
         If field already exists in the hash, it is overwritten.
         """
-        if isinstance(value, bool):
-            value = str(value)
+        value = self._convert_type(value)
         return self._db.hset('%s-%s' % (name, key), hash_key, value)
 
 
@@ -94,7 +98,7 @@ class DBWrapper(object):
         If key does not exist, a new key holding a hash is created.
         """
         values = {
-            key: (str(value) if isinstance(value, bool) else value)
+            key: self._convert_type(value)
             for key, value in values.iteritems()
         }
         return self._db.hmset('%s-%s' % (name, key), values)
