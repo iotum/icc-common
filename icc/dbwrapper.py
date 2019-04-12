@@ -28,10 +28,10 @@ class DBWrapper(object):
             return str(value)
         return value
 
-
+    # BASIC KEY COMMANDS
     def get(self, name, key):
         """ Get the value of key.
-        If the key does not exist the special value nil is returned.
+        If the key does not exist the special value None is returned.
         An error is returned if the value stored at key is not a string, because GET only handles string values.
         """
         return self._db.get('%s-%s' % (name, key))
@@ -46,9 +46,31 @@ class DBWrapper(object):
         return self._db.set('%s-%s' % (name, key), value)
 
 
+    def incr(self, name, key):
+        """ Increments the number stored at key by one.
+        If the key does not exist, it is set to 0 before performing the operation.
+        An error is returned if the key contains a value of the wrong type or contains a string that can not be represented as integer.
+        This operation is limited to 64 bit signed integers.
+        """
+        return self._db.incr('%s-%s' % (name, key))
+
+
     def delete(self, name, key):
         """ Removes the specified keys. A key is ignored if it does not exist. """
         return self._db.delete('%s-%s' % (name, key))
+
+
+    def exists(self, name, key):
+        """ Returns if key exists. """
+        return self._db.exists('%s-%s' % (name, key))
+
+
+    def persist(self, name, key):
+        """ Remove the existing timeout on key, turning the key
+        from volatile (a key with an expire set)
+        to persistent (a key that will never expire as no timeout is associated).
+        """
+        return self._db.persist('%s-%s' % (name, key))
 
 
     def expire(self, name, key, expiry):
@@ -61,6 +83,17 @@ class DBWrapper(object):
         return self._db.expire('%s-%s' % (name, key), expiry)
 
 
+    def ttl(self, name, key):
+        """ Returns the remaining time to live of a key that has a timeout.
+        This introspection capability allows a Redis client to check how many seconds a given key will continue to be part of the dataset.
+
+        Starting with Redis 2.8:
+        The command returns -2 if the key does not exist.
+        The command returns -1 if the key exists but has no associated expire.
+        """
+        return self._db.ttl('%s-%s' % (name, key))
+
+
     def rename(self, name, key, new_key):
         """ Renames key to newkey.
         It returns an error when key does not exist.
@@ -70,6 +103,7 @@ class DBWrapper(object):
         return self._db.rename('%s-%s' % (name, key), '%s-%s' % (name, new_key))
 
 
+    # HASH COMMANDS
     def hget(self, name, key, hash_key):
         """ Returns the value associated with field in the hash stored at key. """
         return self._db.hget('%s-%s' % (name, key), hash_key)
@@ -90,6 +124,24 @@ class DBWrapper(object):
         """
         value = self._convert_type(value)
         return self._db.hset('%s-%s' % (name, key), hash_key, value)
+
+
+    def hsetnx(self, name, key, hash_key, value):
+        """ Sets field in the hash stored at key to value, only if field does not yet exist.
+        If key does not exist, a new key holding a hash is created.
+        If field already exists, this operation has no effect.
+        Returns 1 if HSETNX created a field, otherwise 0.
+        """
+        value = self._convert_type(value)
+        return self._db.hsetnx('%s-%s' % (name, key), hash_key, value)
+
+
+    def hmget(self, name, key, *hash_keys):
+        """ Returns the values associated with the specified fields in the hash stored at key.
+        For every field that does not exist in the hash, a None value is returned.
+        Because non-existing keys are treated as empty hashes, running HMGET against a non-existing key will return a list of None values.
+        """
+        return self._db.hmget('%s-%s' % (name, key), hash_keys)
 
 
     def hmset(self, name, key, values):
@@ -121,30 +173,12 @@ class DBWrapper(object):
         return self._db.hlen('%s-%s' % (name, key))
 
 
-    def incr(self, name, key):
-        """ Increments the number stored at key by one.
-        If the key does not exist, it is set to 0 before performing the operation.
-
-        An error is returned if the key contains a value of the wrong type or contains a string that can not be represented as integer.
-
-        This operation is limited to 64 bit signed integers.
-        """
-        return self._db.incr('%s-%s' % (name, key))
+    def hkeys(self, name, key):
+        """ Return the list of keys within hash. """
+        return self._db.hkeys('%s-%s' % (name, key))
 
 
-    def exists(self, name, key):
-        """ Returns if key exists. """
-        return self._db.exists('%s-%s' % (name, key))
-
-
-    def persist(self, name, key):
-        """ Remove the existing timeout on key, turning the key
-        from volatile (a key with an expire set)
-        to persistent (a key that will never expire as no timeout is associated).
-        """
-        return self._db.persist('%s-%s' % (name, key))
-
-
+    # SET COMMANDS
     def sadd(self, name, key, member):
         """ Add the specified members to the set stored at key.
         Specified members that are already a member of this set are ignored.
@@ -180,6 +214,7 @@ class DBWrapper(object):
         return self._db.scard('%s-%s' % (name, key))
 
 
+    # SORTED SET COMMANDS
     def zadd(self, key, score, member):
         """ Adds all the specified members with the specified scores to the sorted set stored at key.
         It is possible to specify multiple score / member pairs.
@@ -206,9 +241,33 @@ class DBWrapper(object):
     def zscore(self, key, member):
         """ Returns the score of member in the sorted set at key.
 
-        If member does not exist in the sorted set, or key does not exist, nil is returned.
+        If member does not exist in the sorted set, or key does not exist, None is returned.
         """
         return self._db.zscore(key, member)
+
+
+    def zrange(self, key, start, stop):
+        """ Returns the specified range of elements in the sorted set stored at key.
+        The elements are considered to be ordered from the lowest to the highest score.
+        Lexicographical order is used for elements with equal score.
+
+        Both ``start`` and ``stop`` are zero-based indexes, where 0 is the first element, 1 is the next element and so on.
+        They can also be negative numbers indicating offsets from the end of the sorted set, with -1 being the last element of the sorted set, -2 the penultimate element and so on.
+
+        ``start`` and ``stop`` are inclusive ranges, so for example ZRANGE myzset 0 1 will return both the first and the second element of the sorted set.
+
+        Out of range indexes will not produce an error. If ``start`` is larger than the largest index in the sorted set, or ``start`` > ``stop``, an empty list is returned.
+        If ``stop`` is larger than the end of the sorted set Redis will treat it like it is the last element of the sorted set.
+        """
+        return self._db.zrange(key, start, stop)
+
+
+    def zrangeall(self, key):
+        """ Returns all elements in the sorted set stored at key.
+        The elements are considered to be ordered from the lowest to the highest score.
+        Lexicographical order is used for elements with equal score.
+        """
+        return self._db.zrange(key, 0, -1)
 
 
     def zrevrange(self, key, start, stop):
@@ -242,6 +301,7 @@ class DBWrapper(object):
         return self._db.zincrby(key, increment, member)
 
 
+    # SCAN COMMANDS
     def scan_iter(self, name, prefix=None):
         """ Iterates the set of keys in the currently selected Redis database.
 
@@ -250,5 +310,26 @@ class DBWrapper(object):
         prefix_len = len(name) + 1
         if not prefix:
             prefix = ''
-        for key in self._db.scan_iter('%s-%s*' % (name, prefix), count=1000):
+        for key in self._db.scan_iter(match='%s-%s*' % (name, prefix), count=100):
             yield key[prefix_len:]
+
+
+    def sscan_iter(self, name, key, match=None):
+        """ Iterates elements of Sets types.
+        Returns array of elements is a list of Set members.
+        """
+        return self._db.sscan_iter('%s-%s' % (name, key), match=match, count=10)
+
+
+    def hscan_iter(self, name, key, match=None):
+        """ Iterates fields of Hash types and their associated values.
+        Returns array of elements contain two elements, a field and a value, for every returned element of the Hash.
+        """
+        return self._db.hscan_iter('%s-%s' % (name, key), match=match, count=10)
+
+
+    def zscan_iter(self, name, key, match=None):
+        """ Iterates elements of Sorted Set types and their associated scores.
+        Returns array of elements contain two elements, a member and its associated score, for every returned element of the sorted set.
+        """
+        return self._db.zscan_iter('%s-%s' % (name, key), match=match, count=10)
