@@ -168,14 +168,51 @@ class DBWrapper(object):
         return self._db.hexists('%s-%s' % (name, key), hash_key)
 
 
+    def hincrby(self, name, key, hash_key, amount=1):
+        """ Increments the number stored at field in the hash stored at key by increment.
+        If key does not exist, a new key holding a hash is created. If field does not exist
+        the value is set to 0 before the operation is performed.
+
+        The range of values supported by HINCRBY is limited to 64 bit signed integers.
+        """
+        return self._db.hincrby('%s-%s' % (name, key), hash_key, amount)
+
+
+    def hincrbyfloat(self, name, key, hash_key, amount=1.0):
+        """ Increment the specified field of a hash stored at key, and representing a floating
+        point number, by the specified increment. If the increment value is negative, the result
+        is to have the hash field value decremented instead of incremented. If the field does not
+        exist, it is set to 0 before performing the operation. An error is returned if one of the
+        following conditions occur:
+
+        + The field contains a value of the wrong type (not a string).
+
+        + The current field content or the specified increment are not parsable as a double precision
+        floating point number.
+        """
+        return self._db.hincrbyfloat('%s-%s' % (name, key), hash_key, amount)
+
+
     def hlen(self, name, key):
         """ Returns the number of fields contained in the hash stored at key. """
         return self._db.hlen('%s-%s' % (name, key))
 
 
+    def hstrlen(self, name, key, hash_key):
+        """ Returns the string length of the value associated with field in the hash stored
+        at key. If the key or the field do not exist, 0 is returned.
+        """
+        return self._db.hstrlen('%s-%s' % (name, key), hash_key)
+
+
     def hkeys(self, name, key):
         """ Return the list of keys within hash. """
         return self._db.hkeys('%s-%s' % (name, key))
+
+
+    def hvals(self, name, key):
+        """ Returns all values in the hash. """
+        return self._db.hvals('%s-%s' % (name, key))
 
 
     # SET COMMANDS
