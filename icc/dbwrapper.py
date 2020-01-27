@@ -1,7 +1,6 @@
 import ConfigParser
 import glob
 import redis
-import DB
 
 class DBWrapper(object):
     def __init__(self):
