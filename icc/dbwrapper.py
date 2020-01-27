@@ -384,6 +384,12 @@ class DBPipeline(DBWrapper):
     def __init__(self, pipeline):
         self._db = pipeline
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._db.reset()
+
 
     def execute(self, raise_on_error=True):
         """ Execute all the commands in the current pipeline. """
