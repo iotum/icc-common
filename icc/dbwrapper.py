@@ -15,11 +15,11 @@ class DBWrapper(object):
         server = config.get('redis', 'host')
         port = config.getint('redis', 'port')
 
-        self._db = redis.StrictRedis(host=server, port=port, db=0)
+        self._db = redis.Redis(host=server, port=port, db=0)
 
 
     def __getattr__(self, attr):
-        """ Passes all other Redis commands not defined in DBWrapper to StrictRedis. """
+        """ Passes all other Redis commands not defined in DBWrapper to Redis. """
         return getattr(self._db, attr)
 
 
@@ -27,6 +27,13 @@ class DBWrapper(object):
         if value is None or isinstance(value, bool):
             return str(value)
         return value
+
+
+    # Pipeline (ref. http://redis.io/topics/pipelining)
+    def pipeline(self, transaction=False):
+        """ Return a new pipeline object that can queue multiple commands for later execution. """
+        return DBPipeline(self._db.pipeline(transaction))
+
 
     # BASIC KEY COMMANDS
     def get(self, name, key):
@@ -370,3 +377,19 @@ class DBWrapper(object):
         Returns array of elements contain two elements, a member and its associated score, for every returned element of the sorted set.
         """
         return self._db.zscan_iter('%s-%s' % (name, key), match=match, count=10)
+
+
+class DBPipeline(DBWrapper):
+    def __init__(self, pipeline):
+        self._db = pipeline
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._db.reset()
+
+
+    def execute(self, raise_on_error=True):
+        """ Execute all the commands in the current pipeline. """
+        return self._db.execute(raise_on_error)
