@@ -259,6 +259,12 @@ class DBWrapper(object):
 
 
     # SORTED SET COMMANDS
+    def zcard(self, key):
+        """ Return the number of elements in the sorted set stored at key
+        """
+        return self._db.zcard(key)
+
+
     def zadd(self, key, score, member):
         """ Adds all the specified members with the specified scores to the sorted set stored at key.
         It is possible to specify multiple score / member pairs.
